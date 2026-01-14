@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/login.dart';
+import 'package:password_manager/model.dart';
 
 void main() {
-  runApp(PasswordManagerApp());
+  runApp(const PasswordManagerApp());
 }
 
 class PasswordManagerApp extends StatelessWidget {
@@ -25,31 +27,44 @@ class SplashWidget extends StatefulWidget {
 }
 
 class _SplashWidgetState extends State<SplashWidget> {
-
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => 
-        LoginWidget()
-      ));
-    }); 
+    Timer(const Duration(seconds: 3), () {
+      Model.instance.getLastLogin().then((id) {
+        Navigator.of(context)
+            .pushReplacement(MaterialPageRoute(builder: (context) {
+          if (id == -1) {
+            return LoginWidget();
+          } else {
+            return HomeWidget();
+          }
+        }));
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.lock, size: 100,),
-            SizedBox(height: 20,),
-            Text("我的密碼庫", style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold),)
-          ],
-        ),
-      )
-    );
+        body: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.lock,
+            size: 100,
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Text(
+            "我的密碼庫",
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          )
+        ],
+      ),
+    ));
   }
 }
 
@@ -64,67 +79,55 @@ class _HomeWidgetState extends State<HomeWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Text("HELLO"),
-    );
-  }
-}
-
-class LoginWidget extends StatefulWidget {
-  const LoginWidget({super.key});
-
-  @override
-  State<LoginWidget> createState() => _LoginWidgetState();
-}
-
-class _LoginWidgetState extends State<LoginWidget> {
-  final emailCtrl = TextEditingController();
-  final pwdCtrl = TextEditingController();
-  bool pwdVisible = false;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.lock, size: 100,),
-              const SizedBox(height: 10,),
-              const Text("歡迎使用\n我的密碼庫", style: TextStyle(fontSize: 30),textAlign: TextAlign.center,),
-              const SizedBox(height: 10,),
-              TextField(
-                  controller: emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: "帳號 (Email)"
-                  ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            ListTile(
+              title: Text(Model.instance.currentAccount.name),
+              subtitle: Text(Model.instance.currentAccount.email),
+            ),
+            ListTile(
+              title: const Text("匯出密碼"),
+              onTap: () {
+                Model.instance.writeLastLogin(-1);
+                Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (builder) => LoginWidget()));
+              },
+            ),
+            ListTile(
+              title: const Text("匯入密碼"),
+              onTap: () {
+                Model.instance.writeLastLogin(-1);
+                Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (builder) => LoginWidget()));
+              },
+            ),
+            ListTile(
+              title: const Text("登出"),
+              onTap: () {
+                Model.instance.writeLastLogin(-1);
+                Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (builder) => LoginWidget()));
+              },
+            ),
+            ListTile(
+              title: const Text(
+                "刪除帳號",
+                style: TextStyle(color: Colors.red),
               ),
-              TextField(
-                  controller: pwdCtrl,
-                  keyboardType: TextInputType.visiblePassword,
-                  obscureText: !pwdVisible,
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    hintText: "主密碼",
-                    suffixIcon: InkWell(
-                        splashColor: Colors.black54,
-                        customBorder: const CircleBorder(),
-                        onTapDown: (details) {},
-                        child: GestureDetector(child: const Icon(Icons.visibility),onTapDown: (details) {
-                        setState(() {
-                          pwdVisible = true;
-                        });
-                      },onTapUp: (details) {
-                        setState(() {
-                          pwdVisible = false;
-                        });
-                      },)
-                    ),
-                    ),
-              )
-            ],
-          ),
+              onTap: () {
+                Model.instance.writeLastLogin(-1);
+                Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (builder) => LoginWidget()));
+              },
+            )
+          ],
+        ),
       ),
+      appBar: AppBar(
+        title: const Text("我的密碼庫"),
+      ),
+      body: Column(),
     );
   }
 }
