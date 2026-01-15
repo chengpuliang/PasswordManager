@@ -241,57 +241,62 @@ class _HomeWidgetState extends State<HomeWidget> {
               itemBuilder: (builder) => [
                     PopupMenuItem(
                         onTap: () {
-                          sort = Sort.timeAsc;
+                          sort = Sort.custom;
                         },
                         child: Row(
                           children: [
-                            if (sort == Sort.custom) const Icon(Icons.check),
+                            if (sort == Sort.custom) const Icon(Icons.check) else const SizedBox(width: 24,),
                             const SizedBox(
                               width: 10,
                             ),
-                            const Text("自訂排序"),
-                            const Expanded(
-                              child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Icon(Icons.arrow_drop_up)),
-                            ),
+                            const SizedBox(width:150 , child: Text("自訂排序")),
                           ],
                         )),
                     PopupMenuItem(
                         onTap: () {
-                          sort = Sort.nameAsc;
+                          if (sort == Sort.nameAsc) {
+                            sort = Sort.nameDesc;
+                          } else {
+                            sort = Sort.nameAsc;
+                          }
                         },
                         child: Row(
                           children: [
                             if (sort == Sort.nameAsc || sort == Sort.nameDesc)
-                              const Icon(Icons.check),
+                              const Icon(Icons.check) else const SizedBox(width: 24,),
                             const SizedBox(
                               width: 10,
                             ),
                             const Text("依名稱排序"),
-                            const Expanded(
+                            if (sort == Sort.nameAsc || sort == Sort.nameDesc)
+                            Expanded(
                               child: Align(
                                   alignment: Alignment.centerRight,
-                                  child: Icon(Icons.arrow_drop_up)),
+                                  child: Icon((sort == Sort.nameAsc) ? Icons.arrow_drop_up : Icons.arrow_drop_down)),
                             ),
                           ],
                         )),
                     PopupMenuItem(
                         onTap: () {
-                          sort = Sort.timeAsc;
+                          if (sort == Sort.timeAsc) {
+                            sort = Sort.timeDesc;
+                          } else {
+                            sort = Sort.timeAsc;
+                          }
                         },
                         child: Row(
                           children: [
                             if (sort == Sort.timeAsc || sort == Sort.timeDesc)
-                              const Icon(Icons.check),
+                              const Icon(Icons.check) else const SizedBox(width: 24,),
                             const SizedBox(
                               width: 10,
                             ),
                             const Text("依建立時間排序"),
-                            const Expanded(
+                            if (sort == Sort.timeAsc || sort == Sort.timeDesc)
+                            Expanded(
                               child: Align(
                                   alignment: Alignment.centerRight,
-                                  child: Icon(Icons.arrow_drop_up)),
+                                  child: Icon((sort == Sort.timeAsc) ? Icons.arrow_drop_up : Icons.arrow_drop_down)),
                             ),
                           ],
                         ))
