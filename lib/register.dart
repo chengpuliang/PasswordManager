@@ -16,7 +16,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
   final pwdCtrl = TextEditingController();
   final pwdConfirmCtrl = TextEditingController();
   final emailReg = RegExp(
-      "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}\\@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+");
+      "^[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}\\@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+\$");
   bool pwdVisible = false;
   @override
   Widget build(BuildContext context) {
@@ -106,6 +106,8 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                         email: emailCtrl.text,
                         password: pwdCtrl.text));
                     Model.instance.saveAccountList();
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text("帳號建立成功！")));
                     Navigator.of(context).pushReplacement(
                         MaterialPageRoute(builder: (builder) => HomeWidget()));
                   }

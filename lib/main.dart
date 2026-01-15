@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:password_manager/login.dart';
 import 'package:password_manager/model.dart';
+import 'package:password_manager/password_field.dart';
 
 void main() {
   runApp(const PasswordManagerApp());
@@ -14,6 +15,7 @@ class PasswordManagerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: SplashWidget(),
     );
   }
@@ -76,6 +78,17 @@ class HomeWidget extends StatefulWidget {
 }
 
 class _HomeWidgetState extends State<HomeWidget> {
+  Sort sort = Sort.nameAsc;
+  @override
+  void initState() {
+    Model.instance.getAccountList().then((s) {
+      Model.instance.getLastLogin().then((b) {
+        Model.instance.currentAccount = s.firstWhere((t) => t.id == b);
+      });
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,6 +99,7 @@ class _HomeWidgetState extends State<HomeWidget> {
               title: Text(Model.instance.currentAccount.name),
               subtitle: Text(Model.instance.currentAccount.email),
             ),
+            const Divider(),
             ListTile(
               title: const Text("匯出密碼"),
               onTap: () {
@@ -102,12 +116,34 @@ class _HomeWidgetState extends State<HomeWidget> {
                     MaterialPageRoute(builder: (builder) => LoginWidget()));
               },
             ),
+            const Divider(),
             ListTile(
-              title: const Text("登出"),
+              title: const Text(
+                "登出",
+                style: TextStyle(color: Colors.blueAccent),
+              ),
               onTap: () {
-                Model.instance.writeLastLogin(-1);
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (builder) => LoginWidget()));
+                showDialog(
+                    context: context,
+                    builder: (builder) => AlertDialog(
+                          title: const Text("登出？"),
+                          actions: <Widget>[
+                            TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text("取消")),
+                            TextButton(
+                                onPressed: () {
+                                  Model.instance.writeLastLogin(-1);
+                                  Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                          builder: (builder) => LoginWidget()));
+                                },
+                                child: const Text(
+                                  "登出",
+                                  style: TextStyle(color: Colors.red),
+                                ))
+                          ],
+                        ));
               },
             ),
             ListTile(
@@ -116,9 +152,83 @@ class _HomeWidgetState extends State<HomeWidget> {
                 style: TextStyle(color: Colors.red),
               ),
               onTap: () {
-                Model.instance.writeLastLogin(-1);
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (builder) => LoginWidget()));
+                showDialog(
+                    context: context,
+                    builder: (builder) {
+                      final pwdCtrl = TextEditingController();
+                      final pwdConfirmCtrl = TextEditingController();
+                      return AlertDialog(
+                        title: const Text(
+                          "刪除帳號？",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        content: SizedBox(
+                          width: 350,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("輸入主密碼來刪除此帳號\n刪除後將不可復原！"),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                PasswordField(controller: pwdCtrl),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                PasswordField(
+                                  controller: pwdConfirmCtrl,
+                                  hint: "確認主密碼",
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text("取消")),
+                          TextButton(
+                              onPressed: () async {
+                                if (pwdCtrl.text != pwdConfirmCtrl.text ||
+                                    Model.instance.currentAccount.password !=
+                                        pwdCtrl.text) {
+                                  showDialog(
+                                      context: context,
+                                      builder: (builder) => AlertDialog(
+                                            title: Text((pwdCtrl.text !=
+                                                    pwdConfirmCtrl.text)
+                                                ? "密碼不相符"
+                                                : "密碼不正確"),
+                                            actions: [
+                                              TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(),
+                                                  child: const Text("關閉"))
+                                            ],
+                                          ));
+                                } else {
+                                  Model.instance.accountList
+                                      .remove(Model.instance.currentAccount);
+                                  await Model.instance.saveAccountList();
+                                  await Model.instance.writeLastLogin(-1);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text("帳號已刪除，謝謝您的使用！")));
+                                  Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                          builder: (builder) => LoginWidget()));
+                                }
+                              },
+                              child: const Text(
+                                "刪除帳號",
+                                style: TextStyle(color: Colors.red),
+                              ))
+                        ],
+                      );
+                    });
               },
             )
           ],
@@ -126,6 +236,67 @@ class _HomeWidgetState extends State<HomeWidget> {
       ),
       appBar: AppBar(
         title: const Text("我的密碼庫"),
+        actions: [
+          PopupMenuButton(
+              itemBuilder: (builder) => [
+                    PopupMenuItem(
+                        onTap: () {
+                          sort = Sort.timeAsc;
+                        },
+                        child: Row(
+                          children: [
+                            if (sort == Sort.custom) const Icon(Icons.check),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            const Text("自訂排序"),
+                            const Expanded(
+                              child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Icon(Icons.arrow_drop_up)),
+                            ),
+                          ],
+                        )),
+                    PopupMenuItem(
+                        onTap: () {
+                          sort = Sort.nameAsc;
+                        },
+                        child: Row(
+                          children: [
+                            if (sort == Sort.nameAsc || sort == Sort.nameDesc)
+                              const Icon(Icons.check),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            const Text("依名稱排序"),
+                            const Expanded(
+                              child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Icon(Icons.arrow_drop_up)),
+                            ),
+                          ],
+                        )),
+                    PopupMenuItem(
+                        onTap: () {
+                          sort = Sort.timeAsc;
+                        },
+                        child: Row(
+                          children: [
+                            if (sort == Sort.timeAsc || sort == Sort.timeDesc)
+                              const Icon(Icons.check),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            const Text("依建立時間排序"),
+                            const Expanded(
+                              child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Icon(Icons.arrow_drop_up)),
+                            ),
+                          ],
+                        ))
+                  ])
+        ],
       ),
       body: Column(),
     );

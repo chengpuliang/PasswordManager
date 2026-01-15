@@ -19,6 +19,8 @@ class Account {
       id: m['id'], name: m['name'], email: m['email'], password: m['password']);
 }
 
+enum Sort { custom, nameAsc, nameDesc, timeAsc, timeDesc }
+
 class Model {
   Model._();
 

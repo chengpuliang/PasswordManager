@@ -16,6 +16,7 @@ class _PasswordFieldState extends State<PasswordField> {
       controller: widget.controller,
       keyboardType: TextInputType.visiblePassword,
       obscureText: !pwdVisible,
+      obscuringCharacter: "*",
       decoration: InputDecoration(
         border: const OutlineInputBorder(),
         hintText: widget.hint,
@@ -34,6 +35,16 @@ class _PasswordFieldState extends State<PasswordField> {
                 setState(() {
                   pwdVisible = false;
                 });
+              },
+              onLongPressUp: () => {
+                setState(() {
+                  pwdVisible = false;
+                })
+              },
+              onLongPressCancel: () => {
+                setState(() {
+                  pwdVisible = false;
+                })
               },
             )),
       ),
