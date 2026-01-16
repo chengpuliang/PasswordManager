@@ -19,6 +19,35 @@ class Account {
       id: m['id'], name: m['name'], email: m['email'], password: m['password']);
 }
 
+class PasswordItem {
+  final String itemName;
+  final String userName;
+  final String password;
+  final String url;
+  final String createdTime;
+  const PasswordItem(
+      {required this.itemName,
+      required this.userName,
+      required this.password,
+      required this.url,
+      required this.createdTime});
+
+  Map<String, dynamic> toMap() => {
+        "itemName": itemName,
+        "userName": userName,
+        "password": password,
+        "url": url,
+        "createdTime": createdTime
+      };
+
+  factory PasswordItem.fromMap(Map<String, dynamic> m) => PasswordItem(
+      itemName: m["itemName"],
+      userName: m["userName"],
+      password: m["password"],
+      url: m["url"],
+      createdTime: m["createdTime"]);
+}
+
 enum Sort { custom, nameAsc, nameDesc, timeAsc, timeDesc }
 
 class Model {
@@ -26,6 +55,7 @@ class Model {
 
   final appDataPath = "/data/data/com.example.password_manager";
   final List<Account> accountList = [];
+  final List<PasswordItem> pwdItemList = [];
   Account currentAccount =
       const Account(id: 0, name: "", email: "email", password: "password");
 
@@ -58,6 +88,24 @@ class Model {
     final file = File("$appDataPath/Accounts.json");
     await file
         .writeAsString(jsonEncode(accountList.map((t) => t.toMap()).toList()));
+  }
+
+  Future<List<PasswordItem>> getPwdItemList() async {
+    final file = File("$appDataPath/Passwords.json");
+    if (!await file.exists()) {
+      return [];
+    }
+    List<dynamic> json = jsonDecode(await file.readAsString());
+    pwdItemList
+      ..clear()
+      ..addAll(json.map((t) => PasswordItem.fromMap(t)));
+    return pwdItemList;
+  }
+
+  Future<void> savePwdItemList() async {
+    final file = File("$appDataPath/Passwords.json");
+    await file
+        .writeAsString(jsonEncode(pwdItemList.map((t) => t.toMap()).toList()));
   }
 
   static final instance = Model._();

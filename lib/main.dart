@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:password_manager/add_item.dart';
+import 'package:password_manager/drawer.dart';
 import 'package:password_manager/login.dart';
 import 'package:password_manager/model.dart';
 import 'package:password_manager/password_field.dart';
@@ -92,148 +94,12 @@ class _HomeWidgetState extends State<HomeWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            ListTile(
-              title: Text(Model.instance.currentAccount.name),
-              subtitle: Text(Model.instance.currentAccount.email),
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text("匯出密碼"),
-              onTap: () {
-                Model.instance.writeLastLogin(-1);
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (builder) => LoginWidget()));
-              },
-            ),
-            ListTile(
-              title: const Text("匯入密碼"),
-              onTap: () {
-                Model.instance.writeLastLogin(-1);
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (builder) => LoginWidget()));
-              },
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text(
-                "登出",
-                style: TextStyle(color: Colors.blueAccent),
-              ),
-              onTap: () {
-                showDialog(
-                    context: context,
-                    builder: (builder) => AlertDialog(
-                          title: const Text("登出？"),
-                          actions: <Widget>[
-                            TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text("取消")),
-                            TextButton(
-                                onPressed: () {
-                                  Model.instance.writeLastLogin(-1);
-                                  Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                          builder: (builder) => LoginWidget()));
-                                },
-                                child: const Text(
-                                  "登出",
-                                  style: TextStyle(color: Colors.red),
-                                ))
-                          ],
-                        ));
-              },
-            ),
-            ListTile(
-              title: const Text(
-                "刪除帳號",
-                style: TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                showDialog(
-                    context: context,
-                    builder: (builder) {
-                      final pwdCtrl = TextEditingController();
-                      final pwdConfirmCtrl = TextEditingController();
-                      return AlertDialog(
-                        title: const Text(
-                          "刪除帳號？",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        content: SizedBox(
-                          width: 350,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("輸入主密碼來刪除此帳號\n刪除後將不可復原！"),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                PasswordField(controller: pwdCtrl),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                PasswordField(
-                                  controller: pwdConfirmCtrl,
-                                  hint: "確認主密碼",
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text("取消")),
-                          TextButton(
-                              onPressed: () async {
-                                if (pwdCtrl.text != pwdConfirmCtrl.text ||
-                                    Model.instance.currentAccount.password !=
-                                        pwdCtrl.text) {
-                                  showDialog(
-                                      context: context,
-                                      builder: (builder) => AlertDialog(
-                                            title: Text((pwdCtrl.text !=
-                                                    pwdConfirmCtrl.text)
-                                                ? "密碼不相符"
-                                                : "密碼不正確"),
-                                            actions: [
-                                              TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.of(context)
-                                                          .pop(),
-                                                  child: const Text("關閉"))
-                                            ],
-                                          ));
-                                } else {
-                                  Model.instance.accountList
-                                      .remove(Model.instance.currentAccount);
-                                  await Model.instance.saveAccountList();
-                                  await Model.instance.writeLastLogin(-1);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text("帳號已刪除，謝謝您的使用！")));
-                                  Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                          builder: (builder) => LoginWidget()));
-                                }
-                              },
-                              child: const Text(
-                                "刪除帳號",
-                                style: TextStyle(color: Colors.red),
-                              ))
-                        ],
-                      );
-                    });
-              },
-            )
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.of(context)
+            .push(MaterialPageRoute(builder: (builder) => AddPwdItemWidget())),
+        child: const Icon(Icons.add),
       ),
+      drawer: const DrawerWidget(),
       appBar: AppBar(
         title: const Text("我的密碼庫"),
         actions: [
@@ -245,11 +111,16 @@ class _HomeWidgetState extends State<HomeWidget> {
                         },
                         child: Row(
                           children: [
-                            if (sort == Sort.custom) const Icon(Icons.check) else const SizedBox(width: 24,),
+                            if (sort == Sort.custom)
+                              const Icon(Icons.check)
+                            else
+                              const SizedBox(
+                                width: 24,
+                              ),
                             const SizedBox(
                               width: 10,
                             ),
-                            const SizedBox(width:150 , child: Text("自訂排序")),
+                            const SizedBox(width: 150, child: Text("自訂排序")),
                           ],
                         )),
                     PopupMenuItem(
@@ -263,17 +134,23 @@ class _HomeWidgetState extends State<HomeWidget> {
                         child: Row(
                           children: [
                             if (sort == Sort.nameAsc || sort == Sort.nameDesc)
-                              const Icon(Icons.check) else const SizedBox(width: 24,),
+                              const Icon(Icons.check)
+                            else
+                              const SizedBox(
+                                width: 24,
+                              ),
                             const SizedBox(
                               width: 10,
                             ),
                             const Text("依名稱排序"),
                             if (sort == Sort.nameAsc || sort == Sort.nameDesc)
-                            Expanded(
-                              child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Icon((sort == Sort.nameAsc) ? Icons.arrow_drop_up : Icons.arrow_drop_down)),
-                            ),
+                              Expanded(
+                                child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Icon((sort == Sort.nameAsc)
+                                        ? Icons.arrow_drop_up
+                                        : Icons.arrow_drop_down)),
+                              ),
                           ],
                         )),
                     PopupMenuItem(
@@ -287,23 +164,77 @@ class _HomeWidgetState extends State<HomeWidget> {
                         child: Row(
                           children: [
                             if (sort == Sort.timeAsc || sort == Sort.timeDesc)
-                              const Icon(Icons.check) else const SizedBox(width: 24,),
+                              const Icon(Icons.check)
+                            else
+                              const SizedBox(
+                                width: 24,
+                              ),
                             const SizedBox(
                               width: 10,
                             ),
                             const Text("依建立時間排序"),
                             if (sort == Sort.timeAsc || sort == Sort.timeDesc)
-                            Expanded(
-                              child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Icon((sort == Sort.timeAsc) ? Icons.arrow_drop_up : Icons.arrow_drop_down)),
-                            ),
+                              Expanded(
+                                child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Icon((sort == Sort.timeAsc)
+                                        ? Icons.arrow_drop_up
+                                        : Icons.arrow_drop_down)),
+                              ),
                           ],
                         ))
                   ])
         ],
       ),
-      body: Column(),
+      body: ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(100))),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text(
+                  "我的最愛",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Apple ID",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                          ),
+                        ),
+                        Text(
+                          "apple@gmail.com",
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }
